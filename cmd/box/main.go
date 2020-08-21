@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/YouEclipse/steam-box/pkg/steambox"
 	"github.com/google/go-github/github"
+	"github.com/x893675/steam-box/pkg/steambox"
 )
 
 func main() {
@@ -47,12 +47,12 @@ func main() {
 
 	ctx := context.Background()
 
-	lines, err := box.GetPlayTime(ctx, steamID, appIDList...)
+	lines, err := box.GetPlayTime(ctx, steamID)
 	if err != nil {
 		panic("GetPlayTime err:" + err.Error())
 	}
 
-	filename := "🎮 Steam playtime leaderboard"
+	filename := "🎮 最近我在玩…"
 
 	if updateGist {
 		gist, err := box.GetGist(ctx, gistID)

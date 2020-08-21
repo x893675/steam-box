@@ -53,21 +53,21 @@ func (b *Box) UpdateGist(ctx context.Context, id string, gist *github.Gist) erro
 }
 
 // GetPlayTime gets the paytime form steam web API.
-func (b *Box) GetPlayTime(ctx context.Context, steamID uint64, appID ...uint32) ([]string, error) {
-	params := &steam.GetOwnedGamesParams{
-		SteamID:                steamID,
-		IncludeAppInfo:         true,
-		IncludePlayedFreeGames: true,
-	}
-	if len(appID) > 0 {
-		params.AppIDsFilter = appID
+func (b *Box) GetPlayTime(ctx context.Context, steamID uint64) ([]string, error) {
+	params := &steam.GetRecentlyPlayedGamesParams{
+		SteamID: steamID,
+		Count:   5,
 	}
 
-	gameRet, err := b.steam.IPlayerService.GetOwnedGames(ctx, params)
+	gameRet, err := b.steam.IPlayerService.GetRecentlyPlayedGames(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 	var lines []string
+	if gameRet.TotalCount == 0 {
+		lines = append(lines, "🚫 啊哦，最近好像没有玩过游戏呢")
+		return lines, nil
+	}
 	var max = 0
 	sort.Slice(gameRet.Games, func(i, j int) bool {
 		return gameRet.Games[i].PlaytimeForever > gameRet.Games[j].PlaytimeForever
@@ -78,7 +78,7 @@ func (b *Box) GetPlayTime(ctx context.Context, steamID uint64, appID ...uint32) 
 			break
 		}
 
-		hours := int(math.Floor(float64(game.PlaytimeForever / 60)))
+		hours := int(math.Floor(float64(game.Playtime2Weeks / 60)))
 		mins := int(math.Floor(float64(game.PlaytimeForever % 60)))
 
 		line := pad(getNameEmoji(game.Appid, game.Name), " ", 35) + " " +
@@ -133,6 +133,8 @@ func getNameEmoji(id int, name string) string {
 	// hard code some game's emoji
 	var nameEmojiMap = map[int]string{
 		730:    "🔫 ", // CS:GO
+		222880: "🔫 ", // Insurgency
+		265630: "🔫 ", // Fistful of Frags
 		271590: "🚓 ", // GTA 5
 		578080: "🍳 ", // PUBG
 		431960: "💻 ", // Wallpaper Engine
